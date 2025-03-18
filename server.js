@@ -1,32 +1,55 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
+const path = require('path'); // For reliable static file serving
 const app = express();
 
-const supabase = createClient('https://mgtmzrchrmmixcbfkmkw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndG16cmNocm1taXhjYmZrbWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzMjM4OTgsImV4cCI6MjA1Nzg5OTg5OH0.eAxV8aLuVEdX6zgmaAbe2-g-PZ_teEq-2UtQDnUIcGY');
-app.use(express.json());
-app.use(express.static('public'));
+// Load environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mgtmzrchrmmixcbfkmkw.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndG16cmNocm1taXhjYmZrbWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzMjM4OTgsImV4cCI6MjA1Nzg5OTg5OH0.eAxV8aLuVEdX6zgmaAbe2-g-PZ_teEq-2UtQDnUIcGY';
 
-// Add student
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error('Supabase URL and Key must be provided');
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API: Add a student (admin)
 app.post('/api/students', async (req, res) => {
   const { student_id, name, email, total_fees } = req.body;
+  if (!student_id || !name || !email || !total_fees) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
   const { error } = await supabase
     .from('students')
-    .insert([{ student_id, name, email, total_fees }]);
-  if (error) res.status(500).send(error.message);
-  else res.send('Student added');
+    .insert([{ student_id, name, email, total_fees: parseFloat(total_fees) }]);
+  if (error) {
+    console.error('Error adding student:', error);
+    return res.status(500).json({ error: error.message });
+  }
+  res.json({ message: 'Student added successfully' });
 });
 
-// Add payment
+// API: Add a payment (admin)
 app.post('/api/payments', async (req, res) => {
   const { student_id, amount, payment_date } = req.body;
+  if (!student_id || !amount || !payment_date) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
   const { error } = await supabase
     .from('payments')
-    .insert([{ student_id, amount, payment_date }]);
-  if (error) res.status(500).send(error.message);
-  else res.send('Payment recorded');
+    .insert([{ student_id, amount: parseFloat(amount), payment_date }]);
+  if (error) {
+    console.error('Error adding payment:', error);
+    return res.status(500).json({ error: error.message });
+  }
+  res.json({ message: 'Payment recorded successfully' });
 });
 
-// Get student fees
+// API: Get student fees (student/admin)
 app.get('/api/students/:student_id', async (req, res) => {
   const { student_id } = req.params;
   const { data: student, error: studentError } = await supabase
@@ -34,17 +57,30 @@ app.get('/api/students/:student_id', async (req, res) => {
     .select('total_fees')
     .eq('student_id', student_id)
     .single();
-  if (studentError || !student) return res.status(404).send('Student not found');
+  if (studentError || !student) {
+    return res.status(404).json({ error: 'Student not found' });
+  }
 
   const { data: payments, error: paymentError } = await supabase
     .from('payments')
     .select('amount')
     .eq('student_id', student_id);
-  if (paymentError) return res.status(500).send(paymentError.message);
+  if (paymentError) {
+    console.error('Error fetching payments:', paymentError);
+    return res.status(500).json({ error: paymentError.message });
+  }
 
-  const paid = payments.reduce((sum, p) => sum + p.amount, 0);
-  res.json({ total: student.total_fees, paid, outstanding: student.total_fees - paid });
+  const paid = payments ? payments.reduce((sum, p) => sum + p.amount, 0) : 0;
+  const outstanding = student.total_fees - paid;
+  res.json({ total: student.total_fees, paid, outstanding });
+});
+
+// Fallback for root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
