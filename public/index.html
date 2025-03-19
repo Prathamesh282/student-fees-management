@@ -69,7 +69,7 @@
         const res = await fetch(`/api/students/${student_id}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Failed to fetch fees');
-        resultEl.innerHTML = `Total: $${data.total.toFixed(2)}, Paid: $${data.paid.toFixed(2)}, Outstanding: $${data.outstanding.toFixed(2)}`;
+        resultEl.innerHTML = `Total: ₹${data.total.toFixed(2)}, Paid: ₹${data.paid.toFixed(2)}, Outstanding: ₹${data.outstanding.toFixed(2)}`;
       } catch (error) {
         resultEl.innerHTML = '<span class="error">' + error.message + '</span>';
       }
