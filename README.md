@@ -18,7 +18,7 @@ A web-based application for managing university student fees, built with Node.js
 
 ## Purpose
 
-Created as part of Assignment No. 3 to study and implement Storage as a Service. Supabase serves as the primary STaaS provider, with potential extensions to AWS S3, Glacier, or Azure Storage explored conceptually.
+Created as part of Cloud Computing Assignment No. 3 to study and implement Storage as a Service. Supabase serves as the primary STaaS provider, with potential extensions to AWS S3, Glacier, or Azure Storage explored conceptually.
 
 ## Setup
 
