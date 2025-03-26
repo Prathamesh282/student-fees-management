@@ -4,8 +4,8 @@ const path = require('path'); // For reliable static file serving
 const app = express();
 
 // Load environment variables
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mgtmzrchrmmixcbfkmkw.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ndG16cmNocm1taXhjYmZrbWt3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIzMjM4OTgsImV4cCI6MjA1Nzg5OTg5OH0.eAxV8aLuVEdX6zgmaAbe2-g-PZ_teEq-2UtQDnUIcGY';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'YOUR SUPABASE URL';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || 'YOUR SUPABASE KEY';
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   throw new Error('Supabase URL and Key must be provided');
